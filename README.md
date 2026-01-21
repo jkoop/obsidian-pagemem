@@ -1,6 +1,6 @@
 # Pagemem
 
-Pagemem (read "page mem") is an (Obsidian)[https://obsidian.md] plugin for memorizing entire notes.
+Pagemem (read "page mem") is an [Obsidian](https://obsidian.md) plugin for memorizing entire notes.
 
 Features:
 - Dead simple UI
