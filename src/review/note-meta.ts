@@ -79,12 +79,6 @@ export async function updateSchedule(
 		} else if ("bin" in pagemem) {
 			delete pagemem["bin"];
 		}
-		if ("ease" in pagemem) {
-			delete pagemem["ease"];
-		}
-		if ("interval" in pagemem) {
-			delete pagemem["interval"];
-		}
 
 		frontmatter.pagemem = pagemem;
 	});
