@@ -15,7 +15,6 @@ interface ReviewQueueState {
 export class ReviewController {
 	private plugin: PagememPlugin;
 	private keyboardLayoutPromise: Promise<KeyboardLayout>;
-	private skipReviewPaths = new Set<string>();
 	private reviewQueue: ReviewQueueState | null = null;
 
 	constructor(plugin: PagememPlugin) {
@@ -30,19 +29,12 @@ export class ReviewController {
 	}
 
 	onUnload() {
-		this.skipReviewPaths.clear();
 		this.reviewQueue = null;
 	}
 
 	isMemoryNoteFile(file: TFile): boolean {
 		const cache = this.plugin.app.metadataCache.getFileCache(file);
 		return isMemoryNote(cache);
-	}
-
-	openForEditing(file: TFile) {
-		this.skipReviewPaths.add(file.path);
-		const leaf = this.plugin.app.workspace.getLeaf(false);
-		void leaf.openFile(file, { state: { mode: "source" } });
 	}
 
 	async reviewCurrentNote(file: TFile): Promise<void> {
@@ -100,11 +92,6 @@ export class ReviewController {
 			return;
 		}
 
-		if (this.skipReviewPaths.has(file.path)) {
-			this.skipReviewPaths.delete(file.path);
-			return;
-		}
-
 		const cache = this.plugin.app.metadataCache.getFileCache(file);
 		if (!isMemoryNote(cache)) {
 			return;
@@ -115,9 +102,7 @@ export class ReviewController {
 			return;
 		}
 
-		await this.openReviewModal(file, schedule, {
-			onEdit: () => this.openForEditing(file),
-		});
+		await this.openReviewModal(file, schedule);
 	}
 
 	private async reviewNextInQueue(): Promise<void> {
@@ -136,9 +121,7 @@ export class ReviewController {
 		const cache = this.plugin.app.metadataCache.getFileCache(file);
 		const schedule = getSchedule(cache);
 
-		await this.openReviewModal(file, schedule, {
-			onEdit: () => this.openForEditing(file),
-		});
+		await this.openReviewModal(file, schedule);
 
 		if (this.reviewQueue) {
 			this.reviewQueue.index += 1;
@@ -148,8 +131,7 @@ export class ReviewController {
 
 	private async openReviewModal(
 		file: TFile,
-		schedule: PagememSchedule,
-		handlers?: { onEdit?: () => void }
+		schedule: PagememSchedule
 	): Promise<void> {
 		const keyboardLayout = await this.keyboardLayoutPromise;
 
@@ -158,12 +140,9 @@ export class ReviewController {
 				keyboardLayout,
 				schedule,
 				intervals: this.plugin.settings.leitnerIntervals,
+				successThresholdPercent: this.plugin.settings.leitnerSuccessThreshold,
 				onComplete: resolve,
 				onSkip: resolve,
-				onEdit: () => {
-					handlers?.onEdit?.();
-					resolve();
-				},
 			});
 			modal.open();
 		});

@@ -4,7 +4,6 @@ import { formatDate, parseDate, startOfDay } from "../utils/dates";
 export interface PagememSchedule {
 	lastReview?: string;
 	nextReview?: string;
-	interval?: number;
 	bin?: number;
 }
 
@@ -40,10 +39,9 @@ export function getSchedule(cache: CachedMetadata | null): PagememSchedule {
 	const schedule = pagemem as Record<string, unknown>;
 	const lastReview = getString(schedule["last-review"]);
 	const nextReview = getString(schedule["next-review"]);
-	const interval = getNumber(schedule["interval"]);
 	const bin = getNumber(schedule["bin"]);
 
-	return { lastReview, nextReview, interval, bin };
+	return { lastReview, nextReview, bin };
 }
 
 export function isScheduleDue(schedule: PagememSchedule, today: Date): boolean {
@@ -76,9 +74,6 @@ export async function updateSchedule(
 		if (schedule.nextReview) {
 			pagemem["next-review"] = schedule.nextReview;
 		}
-		if (schedule.interval !== undefined) {
-			pagemem["interval"] = schedule.interval;
-		}
 		if (schedule.bin !== undefined) {
 			pagemem["bin"] = schedule.bin;
 		} else if ("bin" in pagemem) {
@@ -86,6 +81,9 @@ export async function updateSchedule(
 		}
 		if ("ease" in pagemem) {
 			delete pagemem["ease"];
+		}
+		if ("interval" in pagemem) {
+			delete pagemem["interval"];
 		}
 
 		frontmatter.pagemem = pagemem;

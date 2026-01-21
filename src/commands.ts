@@ -33,20 +33,4 @@ export function registerCommands(plugin: PagememPlugin, reviewController: Review
 			return true;
 		},
 	});
-
-	plugin.addCommand({
-		id: "pagemem-edit-current-note",
-		name: "Edit memory note (skip review)",
-		checkCallback: (checking) => {
-			const file = plugin.app.workspace.getActiveFile();
-			if (!file || !reviewController.isMemoryNoteFile(file)) {
-				return false;
-			}
-
-			if (!checking) {
-				reviewController.openForEditing(file);
-			}
-			return true;
-		},
-	});
 }

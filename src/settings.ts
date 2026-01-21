@@ -5,11 +5,13 @@ import { DEFAULT_LEITNER_INTERVALS, normalizeIntervals } from "./scheduling/leit
 export interface PagememSettings {
 	reviewOnOpen: boolean;
 	leitnerIntervals: number[];
+	leitnerSuccessThreshold: number;
 }
 
 export const DEFAULT_SETTINGS: PagememSettings = {
 	reviewOnOpen: true,
 	leitnerIntervals: DEFAULT_LEITNER_INTERVALS.slice(),
+	leitnerSuccessThreshold: 90,
 };
 
 export class PagememSettingTab extends PluginSettingTab {
@@ -52,6 +54,20 @@ export class PagememSettingTab extends PluginSettingTab {
 						}
 
 						this.plugin.settings.leitnerIntervals = normalizeIntervals(parsed);
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Leitner success threshold")
+			.setDesc("Minimum percentage of correct inputs required to pass a review.")
+			.addSlider((slider) =>
+				slider
+					.setLimits(0, 100, 1)
+					.setValue(this.plugin.settings.leitnerSuccessThreshold)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.leitnerSuccessThreshold = value;
 						await this.plugin.saveSettings();
 					})
 			);

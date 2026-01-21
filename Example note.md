@@ -4,7 +4,6 @@ tags: [pagemem]
 pagemem:
   last-review: 2020-01-01
   next-review: 2020-01-06
-  interval: 5
   bin: 4
 ---
 

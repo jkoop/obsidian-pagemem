@@ -9,9 +9,9 @@ interface ReviewModalOptions {
 	keyboardLayout: KeyboardLayout;
 	schedule: PagememSchedule;
 	intervals: number[];
+	successThresholdPercent: number;
 	onComplete?: () => void;
 	onSkip?: () => void;
-	onEdit?: () => void;
 }
 
 export class PagememReviewModal extends Modal {
@@ -45,12 +45,6 @@ export class PagememReviewModal extends Modal {
 		this.progressEl = header.createEl("div", { cls: "pagemem-review-progress", text: "0 / 0" });
 
 		const actions = header.createDiv({ cls: "pagemem-review-actions" });
-		const editButton = actions.createEl("button", { text: "Edit note" });
-		editButton.addEventListener("click", () => {
-			this.finalize("edit");
-			this.close();
-		});
-
 		const skipButton = actions.createEl("button", { text: "Skip review" });
 		skipButton.addEventListener("click", () => {
 			this.finalize("skip");
@@ -207,7 +201,11 @@ export class PagememReviewModal extends Modal {
 	private async finishReview(): Promise<void> {
 		const total = this.words.length;
 		const accuracy = total === 0 ? 1 : (total - this.incorrectCount) / total;
-		const response = responseFromAccuracy(accuracy);
+		const accuracyPercent = accuracy * 100;
+		const response = responseFromAccuracy(
+			accuracyPercent,
+			this.options.successThresholdPercent
+		);
 
 		const today = startOfDay(new Date());
 		const latestSchedule = getSchedule(this.app.metadataCache.getFileCache(this.file));
@@ -223,16 +221,16 @@ export class PagememReviewModal extends Modal {
 		);
 		await updateSchedule(this.app, this.file, nextSchedule);
 
-		const accuracyPercent = Math.round(accuracy * 100);
+		const accuracyPercentRounded = Math.round(accuracyPercent);
 		new Notice(
-			`Review complete (${accuracyPercent}%). Next review ${nextSchedule.nextReview}.`
+			`Review complete (${accuracyPercentRounded}%). Next review ${nextSchedule.nextReview}.`
 		);
 
 		this.finalize("complete");
 		this.close();
 	}
 
-	private finalize(type: "complete" | "skip" | "edit") {
+	private finalize(type: "complete" | "skip") {
 		if (this.finalized) {
 			return;
 		}
@@ -240,8 +238,6 @@ export class PagememReviewModal extends Modal {
 
 		if (type === "complete") {
 			this.options.onComplete?.();
-		} else if (type === "edit") {
-			this.options.onEdit?.();
 		} else {
 			this.options.onSkip?.();
 		}
@@ -254,12 +250,9 @@ export class PagememReviewModal extends Modal {
 	}
 }
 
-function responseFromAccuracy(accuracy: number): ReviewResponse {
-	if (accuracy >= 1) {
-		return "easy";
-	}
-	if (accuracy >= 0.8) {
-		return "good";
-	}
-	return "hard";
+function responseFromAccuracy(
+	accuracyPercent: number,
+	thresholdPercent: number
+): ReviewResponse {
+	return accuracyPercent >= thresholdPercent ? "success" : "fail";
 }
