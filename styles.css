@@ -1,8 +1,62 @@
-/*
+.pagemem-review-modal .modal-content {
+	padding: 16px;
+	width: min(900px, 90vw);
+	height: min(80vh, 900px);
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.pagemem-review-content {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	height: 100%;
+}
 
-If your plugin does not need CSS, delete this file.
+.pagemem-review-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
 
-*/
+.pagemem-review-title {
+	font-size: 1.1em;
+	font-weight: 600;
+}
+
+.pagemem-review-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.pagemem-review-instructions {
+	color: var(--text-muted);
+	font-size: 0.9em;
+}
+
+.pagemem-review-body {
+	flex: 1;
+	overflow: auto;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 12px;
+	background-color: var(--background-primary);
+}
+
+.pagemem-review-text {
+	margin: 0;
+	font-family: var(--font-monospace);
+	white-space: pre;
+}
+
+.pagemem-word--hidden {
+	color: var(--text-faint);
+}
+
+.pagemem-word--current {
+	background-color: var(--background-modifier-hover);
+	border-radius: 4px;
+}
+
+.pagemem-word--wrong {
+	color: var(--text-error);
+}
