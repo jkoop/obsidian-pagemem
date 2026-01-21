@@ -17,4 +17,6 @@ That's it. Done.
 
 ### Reviewing memory notes
 
-Open the note like you would any other note. The UI will then require you to type the first letter of each word in order (case-insensitive). E.g. [the example note](/Example%20note.md) will require you to type `MitfotmbwdoiiesarwnIitroiotftpoifaIpecnbriwbiflropitdMliudafoa`.
+There are two ways of doing this:
+- Open each highlighted note like you would any other note. The UI will then require you to type the first letter of each word in order (case-insensitive). E.g. [the example note](/Example%20note.md) will require you to type `MitfotmbwdoiiesarwnIitroiotftpoifaIpecnbriwbiflropitdMliudafoa`.
+- Use the "Review all due memory notes" command 
