@@ -4,8 +4,8 @@ tags: [pagemem]
 pagemem:
   last-review: 2020-01-01
   next-review: 2020-01-06
-  ease: 500
-  interval: 6
+  interval: 5
+  bin: 4
 ---
 
 <!-- From Wikipedia, the free encyclopedia -->

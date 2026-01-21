@@ -5,7 +5,7 @@ export interface PagememSchedule {
 	lastReview?: string;
 	nextReview?: string;
 	interval?: number;
-	ease?: number;
+	bin?: number;
 }
 
 const PAGEMEM_TAG = "pagemem";
@@ -41,9 +41,9 @@ export function getSchedule(cache: CachedMetadata | null): PagememSchedule {
 	const lastReview = getString(schedule["last-review"]);
 	const nextReview = getString(schedule["next-review"]);
 	const interval = getNumber(schedule["interval"]);
-	const ease = getNumber(schedule["ease"]);
+	const bin = getNumber(schedule["bin"]);
 
-	return { lastReview, nextReview, interval, ease };
+	return { lastReview, nextReview, interval, bin };
 }
 
 export function isScheduleDue(schedule: PagememSchedule, today: Date): boolean {
@@ -79,8 +79,13 @@ export async function updateSchedule(
 		if (schedule.interval !== undefined) {
 			pagemem["interval"] = schedule.interval;
 		}
-		if (schedule.ease !== undefined) {
-			pagemem["ease"] = schedule.ease;
+		if (schedule.bin !== undefined) {
+			pagemem["bin"] = schedule.bin;
+		} else if ("bin" in pagemem) {
+			delete pagemem["bin"];
+		}
+		if ("ease" in pagemem) {
+			delete pagemem["ease"];
 		}
 
 		frontmatter.pagemem = pagemem;

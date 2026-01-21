@@ -1,6 +1,7 @@
-import { Notice, TFile } from "obsidian";
+import { Notice, TFile, TFolder } from "obsidian";
 import PagememPlugin from "../main";
 import { KeyboardLayout } from "./keyboard";
+import { FolderSuggestModal } from "./folder-suggest";
 import { PagememReviewModal } from "./review-modal";
 import { getSchedule, isMemoryNote, isScheduleDue, PagememSchedule } from "./note-meta";
 import { parseDate, startOfDay } from "../utils/dates";
@@ -8,6 +9,7 @@ import { parseDate, startOfDay } from "../utils/dates";
 interface ReviewQueueState {
 	files: TFile[];
 	index: number;
+	completionMessage: string;
 }
 
 export class ReviewController {
@@ -66,8 +68,31 @@ export class ReviewController {
 			return;
 		}
 
-		this.reviewQueue = { files: dueNotes, index: 0 };
+		this.reviewQueue = { files: dueNotes, index: 0, completionMessage: "All due memory notes reviewed." };
 		await this.reviewNextInQueue();
+	}
+
+	async reviewNotesInFolder(folder: TFolder): Promise<void> {
+		if (this.reviewQueue) {
+			new Notice("A review session is already in progress.");
+			return;
+		}
+
+		const notes = this.getNotesInFolder(folder);
+		if (notes.length === 0) {
+			new Notice("No memory notes found in that folder.");
+			return;
+		}
+
+		this.reviewQueue = { files: notes, index: 0, completionMessage: "Folder review complete." };
+		await this.reviewNextInQueue();
+	}
+
+	pickFolderForReview() {
+		const modal = new FolderSuggestModal(this.plugin.app, (folder) => {
+			void this.reviewNotesInFolder(folder);
+		});
+		modal.open();
 	}
 
 	private async onFileOpen(file: TFile | null): Promise<void> {
@@ -102,8 +127,9 @@ export class ReviewController {
 
 		const file = this.reviewQueue.files[this.reviewQueue.index];
 		if (!file) {
+			const completionMessage = this.reviewQueue.completionMessage;
 			this.reviewQueue = null;
-			new Notice("All due memory notes reviewed.");
+			new Notice(completionMessage);
 			return;
 		}
 
@@ -131,6 +157,7 @@ export class ReviewController {
 			const modal = new PagememReviewModal(this.plugin.app, file, {
 				keyboardLayout,
 				schedule,
+				intervals: this.plugin.settings.leitnerIntervals,
 				onComplete: resolve,
 				onSkip: resolve,
 				onEdit: () => {
@@ -175,5 +202,45 @@ export class ReviewController {
 		});
 
 		return dueNotes.map((entry) => entry.file);
+	}
+
+	private getNotesInFolder(folder: TFolder): TFile[] {
+		const today = startOfDay(new Date());
+		const prefix = folder.path ? `${folder.path}/` : "";
+		const notes: Array<{ file: TFile; dueDate: Date | null }> = [];
+
+		for (const file of this.plugin.app.vault.getMarkdownFiles()) {
+			if (prefix && !file.path.startsWith(prefix)) {
+				continue;
+			}
+
+			const cache = this.plugin.app.metadataCache.getFileCache(file);
+			if (!isMemoryNote(cache)) {
+				continue;
+			}
+
+			const schedule = getSchedule(cache);
+			const dueDate = schedule.nextReview ? parseDate(schedule.nextReview) : null;
+			const isDue = isScheduleDue(schedule, today);
+			notes.push({
+				file,
+				dueDate: isDue ? dueDate : null,
+			});
+		}
+
+		notes.sort((a, b) => {
+			if (!a.dueDate && !b.dueDate) {
+				return a.file.path.localeCompare(b.file.path);
+			}
+			if (!a.dueDate) {
+				return 1;
+			}
+			if (!b.dueDate) {
+				return -1;
+			}
+			return a.dueDate.getTime() - b.dueDate.getTime();
+		});
+
+		return notes.map((entry) => entry.file);
 	}
 }

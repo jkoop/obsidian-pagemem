@@ -1,5 +1,5 @@
 import { App, Modal, Notice, TFile } from "obsidian";
-import { calculateNextSchedule, ReviewResponse } from "../scheduling/osr";
+import { calculateNextSchedule, ReviewResponse } from "../scheduling/leitner";
 import { startOfDay } from "../utils/dates";
 import { KeyboardLayout } from "./keyboard";
 import { getSchedule, PagememSchedule, updateSchedule } from "./note-meta";
@@ -8,6 +8,7 @@ import { getReviewText, maskWord, tokenizeReviewText } from "./tokenizer";
 interface ReviewModalOptions {
 	keyboardLayout: KeyboardLayout;
 	schedule: PagememSchedule;
+	intervals: number[];
 	onComplete?: () => void;
 	onSkip?: () => void;
 	onEdit?: () => void;
@@ -214,7 +215,12 @@ export class PagememReviewModal extends Modal {
 			...this.options.schedule,
 			...latestSchedule,
 		};
-		const nextSchedule = calculateNextSchedule(baseSchedule, response, today);
+		const nextSchedule = calculateNextSchedule(
+			baseSchedule,
+			response,
+			today,
+			this.options.intervals
+		);
 		await updateSchedule(this.app, this.file, nextSchedule);
 
 		const accuracyPercent = Math.round(accuracy * 100);

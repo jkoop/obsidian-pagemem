@@ -11,6 +11,14 @@ export function registerCommands(plugin: PagememPlugin, reviewController: Review
 	});
 
 	plugin.addCommand({
+		id: "pagemem-review-folder-notes",
+		name: "Review memory notes in folder",
+		callback: () => {
+			reviewController.pickFolderForReview();
+		},
+	});
+
+	plugin.addCommand({
 		id: "pagemem-review-current-note",
 		name: "Review current memory note",
 		checkCallback: (checking) => {
