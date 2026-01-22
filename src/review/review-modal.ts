@@ -2,7 +2,7 @@ import { App, Modal, Notice, TFile } from "obsidian";
 import { calculateNextSchedule, ReviewResponse } from "../scheduling/leitner";
 import { startOfDay } from "../utils/dates";
 import { KeyboardLayout } from "./keyboard";
-import { getSchedule, isScheduleDue, PagememSchedule, updateSchedule } from "./note-meta";
+import { getSchedule, PagememSchedule, updateSchedule } from "./note-meta";
 import { getReviewText, maskWord, tokenizeReviewText } from "./tokenizer";
 
 interface ReviewModalOptions {
@@ -220,15 +220,11 @@ export class PagememReviewModal extends Modal {
 			...latestSchedule,
 		};
 		
-		// Check if this is an early review (before the due date)
-		const isEarlyReview = !isScheduleDue(baseSchedule, today);
-		
 		const nextSchedule = calculateNextSchedule(
 			baseSchedule,
 			response,
 			today,
-			this.options.intervals,
-			isEarlyReview
+			this.options.intervals
 		);
 		await updateSchedule(this.app, this.file, nextSchedule);
 
