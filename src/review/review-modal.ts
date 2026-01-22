@@ -2,7 +2,7 @@ import { App, Modal, Notice, TFile } from "obsidian";
 import { calculateNextSchedule, ReviewResponse } from "../scheduling/leitner";
 import { startOfDay } from "../utils/dates";
 import { KeyboardLayout } from "./keyboard";
-import { getSchedule, PagememSchedule, updateSchedule } from "./note-meta";
+import { getSchedule, isScheduleDue, PagememSchedule, updateSchedule } from "./note-meta";
 import { getReviewText, maskWord, tokenizeReviewText } from "./tokenizer";
 
 interface ReviewModalOptions {
@@ -213,11 +213,16 @@ export class PagememReviewModal extends Modal {
 			...this.options.schedule,
 			...latestSchedule,
 		};
+		
+		// Check if the note was due at the time of review
+		const wasDue = isScheduleDue(baseSchedule, today);
+		
 		const nextSchedule = calculateNextSchedule(
 			baseSchedule,
 			response,
 			today,
-			this.options.intervals
+			this.options.intervals,
+			wasDue
 		);
 		await updateSchedule(this.app, this.file, nextSchedule);
 

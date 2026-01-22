@@ -9,12 +9,25 @@ export function calculateNextSchedule(
 	current: PagememSchedule | null,
 	response: ReviewResponse,
 	today: Date,
-	intervals: number[]
+	intervals: number[],
+	wasDue: boolean
 ): PagememSchedule {
 	const normalized = normalizeIntervals(intervals);
 	const currentBin = clamp(current?.bin ?? 0, 0, normalized.length - 1);
 
-	const nextBin = response === "fail" ? 0 : Math.min(currentBin + 1, normalized.length - 1);
+	// Determine next bin based on response and whether the note was due
+	let nextBin: number;
+	if (response === "fail") {
+		// Always reset bin to 0 on failure, regardless of due status
+		nextBin = 0;
+	} else if (wasDue) {
+		// Only increment bin if the note was due
+		nextBin = Math.min(currentBin + 1, normalized.length - 1);
+	} else {
+		// Keep the same bin if the note was not due
+		nextBin = currentBin;
+	}
+
 	const interval = Math.max(1, normalized[nextBin] ?? 1);
 	const reviewDate = startOfDay(today);
 	const nextReviewDate = addDays(reviewDate, Math.round(interval));
