@@ -9,12 +9,19 @@ export function calculateNextSchedule(
 	current: PagememSchedule | null,
 	response: ReviewResponse,
 	today: Date,
-	intervals: number[]
+	intervals: number[],
+	isEarlyReview: boolean = false
 ): PagememSchedule {
 	const normalized = normalizeIntervals(intervals);
 	const currentBin = clamp(current?.bin ?? 0, 0, normalized.length - 1);
 
-	const nextBin = response === "fail" ? 0 : Math.min(currentBin + 1, normalized.length - 1);
+	// Only increment bin if not reviewing early and response is success
+	const nextBin = response === "fail" 
+		? 0 
+		: isEarlyReview 
+			? currentBin 
+			: Math.min(currentBin + 1, normalized.length - 1);
+	
 	const interval = Math.max(1, normalized[nextBin] ?? 1);
 	const reviewDate = startOfDay(today);
 	const nextReviewDate = addDays(reviewDate, Math.round(interval));

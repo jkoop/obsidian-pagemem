@@ -58,7 +58,7 @@ function stripFrontmatter(content: string): string {
 
 	let endIndex = -1;
 	for (let i = 1; i < lines.length; i += 1) {
-		const line = lines[i].trim();
+		const line = lines[i]?.trim();
 		if (line === "---" || line === "...") {
 			endIndex = i;
 			break;

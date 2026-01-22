@@ -2,7 +2,7 @@ import { App, Modal, Notice, TFile } from "obsidian";
 import { calculateNextSchedule, ReviewResponse } from "../scheduling/leitner";
 import { startOfDay } from "../utils/dates";
 import { KeyboardLayout } from "./keyboard";
-import { getSchedule, PagememSchedule, updateSchedule } from "./note-meta";
+import { getSchedule, isScheduleDue, PagememSchedule, updateSchedule } from "./note-meta";
 import { getReviewText, maskWord, tokenizeReviewText } from "./tokenizer";
 
 interface ReviewModalOptions {
@@ -132,6 +132,9 @@ export class PagememReviewModal extends Modal {
 		}
 
 		const expectedChar = expectedWord[0];
+		if (!expectedChar) {
+			return;
+		}
 		const isCorrect = this.matchesExpected(event, expectedChar);
 		this.revealCurrentWord(isCorrect);
 		this.advance();
@@ -152,7 +155,10 @@ export class PagememReviewModal extends Modal {
 			return;
 		}
 
-		span.textContent = this.words[this.currentIndex];
+		const word = this.words[this.currentIndex];
+		if (word !== undefined) {
+			span.textContent = word;
+		}
 		span.classList.remove("pagemem-word--hidden", "pagemem-word--current");
 
 		if (!correct) {
@@ -213,17 +219,22 @@ export class PagememReviewModal extends Modal {
 			...this.options.schedule,
 			...latestSchedule,
 		};
+		
+		// Check if this is an early review (before the due date)
+		const isEarlyReview = !isScheduleDue(baseSchedule, today);
+		
 		const nextSchedule = calculateNextSchedule(
 			baseSchedule,
 			response,
 			today,
-			this.options.intervals
+			this.options.intervals,
+			isEarlyReview
 		);
 		await updateSchedule(this.app, this.file, nextSchedule);
 
 		const accuracyPercentRounded = Math.round(accuracyPercent);
 		new Notice(
-			`Review complete (${accuracyPercentRounded}%). Next review ${nextSchedule.nextReview}.`
+			`Review complete (${accuracyPercentRounded}%). Next review ${nextSchedule.nextReview ?? "not scheduled"}.`
 		);
 
 		this.finalize("complete");
